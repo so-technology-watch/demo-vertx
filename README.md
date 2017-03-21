@@ -2,5 +2,5 @@
 
 ## Comunication REST
 
-- '''ClientREST.java''' : Client REST
-- '''ServerREST.java''' : Serveur REST
+- **ClientREST.java** : Client REST
+- **ServerREST.java** : Serveur REST
