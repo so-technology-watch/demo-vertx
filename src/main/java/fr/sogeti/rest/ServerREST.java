@@ -35,11 +35,33 @@ public class ServerREST extends AbstractVerticle{
         vertx.createHttpServer().requestHandler(router::accept).listen(8080);
         getAll(router);
         create(router);
-        //get(router);
+        get(router);
         //update(router);
         //delete(router);
     }
-    
+    protected void get(Router router) {
+        router.get("/books").handler( ctx -> {
+            HttpServerResponse response = ctx.response();
+            response.putHeader("content-type", "application/json");
+            String idStr = ctx.request().getParam("id");
+            if(LOG.isLoggable(Level.INFO)){
+                LOG.log(Level.INFO, "get for id {0}", idStr);
+            }
+            if(isValidInteger(idStr)){
+                int id = Integer.valueOf(idStr);
+                Book book = bookDAO.get(id);
+                response.end(new Gson().toJson(book));
+            }
+        });
+    }
+    private boolean isValidInteger(String id){
+        try{
+            Integer.valueOf(id);
+        }catch(NumberFormatException e){
+            return false;
+        }
+        return true;
+    }
     protected void getAll(Router router) {
         Map<Integer, Book> books = bookDAO.getAll();
         router.get("/books").handler( ctx -> {

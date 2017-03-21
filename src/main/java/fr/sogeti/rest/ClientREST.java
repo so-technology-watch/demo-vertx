@@ -63,12 +63,12 @@ public class ClientREST extends AbstractVerticle{
     
     private void get(Integer id, Function<Book, Void> f){
         WebClient client = WebClient.create(vertx);
-        client.get(8080, "localhost", "/books").send(ar -> {
+        client.get(8080, "localhost", "/books").setQueryParam("id", id.toString()).send(ar -> {
             if (ar.succeeded()) {
                 HttpResponse<Buffer> response = ar.result();
                 if(LOG.isLoggable(Level.INFO)) {
                     LOG.log(Level.INFO, "Received response with status code {0}", response.statusCode());
-                    LOG.log(Level.INFO, "Response was : {0}", response.body());
+                    LOG.log(Level.INFO, "Response was : {0}", response.bodyAsString());
                 }
                 Book book = new Gson().fromJson(response.bodyAsString(), Book.class);
                 f.apply(book);
