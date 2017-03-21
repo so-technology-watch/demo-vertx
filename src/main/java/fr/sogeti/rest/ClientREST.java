@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import fr.sogeti.domain.Book;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.lang.reflect.Type;
@@ -31,6 +30,10 @@ public class ClientREST extends AbstractVerticle{
             
             get(1, (book) -> {
                 System.out.println(book.getNom());
+                
+                Book bookTrAdd = new Book(10, "Dix petits nègres", "Agatha Cristie");
+                create(bookTrAdd);
+                
                 return null;
             });
             
@@ -63,12 +66,16 @@ public class ClientREST extends AbstractVerticle{
         client.get(8080, "localhost", "/books").send(ar -> {
             if (ar.succeeded()) {
                 HttpResponse<Buffer> response = ar.result();
-                LOG.log(Level.INFO, "Received response with status code {0}", response.statusCode());
-                LOG.log(Level.INFO, "Response was : {0}", response.body());
+                if(LOG.isLoggable(Level.INFO)) {
+                    LOG.log(Level.INFO, "Received response with status code {0}", response.statusCode());
+                    LOG.log(Level.INFO, "Response was : {0}", response.body());
+                }
                 Book book = new Gson().fromJson(response.bodyAsString(), Book.class);
                 f.apply(book);
             } else {
-                LOG.log(Level.INFO, "Something went wrong {0}", ar.cause().getMessage());
+                if(LOG.isLoggable(Level.INFO)) {
+                    LOG.log(Level.INFO, "Something went wrong {0}", ar.cause().getMessage());
+                }
             }
         });
     }
@@ -76,20 +83,21 @@ public class ClientREST extends AbstractVerticle{
     private void create(Book book){
         WebClient client = WebClient.create(vertx);
         
-        JsonObject json = JsonObject.mapFrom(book);
-        LOG.log(Level.INFO, "Json object to send {0}", json);
-        
         client
           .post(8080, "localhost", "/books")
-          .sendJsonObject(json, ar -> {
+          .sendJson(book, ar -> {
             if (ar.succeeded()) {
                 HttpResponse<Buffer> response = ar.result();
-                LOG.log(Level.INFO, "Received response with status code (POST) {0}", response.statusCode());
-                LOG.log(Level.INFO, "Response was : {0}", response.body());
+                if(LOG.isLoggable(Level.INFO)) {
+                    LOG.log(Level.INFO, "Received response with status code (POST) {0}", response.statusCode());
+                    LOG.log(Level.INFO, "Response was : {0}", response.body());
+                }
             } else {
-                LOG.log(Level.INFO, "Something went wrong {0}", ar.cause().getMessage());
+                if(LOG.isLoggable(Level.INFO)) {
+                    LOG.log(Level.INFO, "Something went wrong {0}", ar.cause().getMessage());
+                }
             }
-          });        
+          });
     }
     
 }

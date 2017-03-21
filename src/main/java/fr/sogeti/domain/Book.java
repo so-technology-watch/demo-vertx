@@ -45,5 +45,10 @@ public class Book implements Serializable{
     public void setAuteur(String auteur) {
         this.auteur = auteur;
     }
+
+    @Override
+    public String toString() {
+        return "Book{" + "id=" + id + ", nom=" + nom + ", auteur=" + auteur + '}';
+    }
     
 }

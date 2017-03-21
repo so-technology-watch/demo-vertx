@@ -53,12 +53,13 @@ public class ServerREST extends AbstractVerticle{
         router.post("/books").handler( ctx -> {
             HttpServerResponse response = ctx.response();
             response.putHeader("content-type", "application/json");
-            LOG.log(Level.INFO, "data POSTED on the server {0}", ctx.getBodyAsJson());
-            //books.put(books.size() + 1, ctx.getBodyAsJson());
+            if(LOG.isLoggable(Level.INFO)){
+                LOG.log(Level.INFO, "data POSTED on the server {0}", ctx.getBodyAsString());
+            }
+            Book book = new Gson().fromJson(ctx.getBodyAsString(), Book.class);
+            bookDAO.save(book);
             response.end("success");
         });
     }
-    
-    
     
 }
