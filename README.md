@@ -1,4 +1,4 @@
-# Démonstration de réalisaition de microservices avec Vert.X
+# Démonstration de réalisation de microservices avec Vert.X
 
 ## Comunication REST
 
