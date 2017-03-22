@@ -36,7 +36,7 @@ public class ServerREST extends AbstractVerticle{
         getAll(router);
         create(router);
         get(router);
-        //update(router);
+        update(router);
         //delete(router);
     }
     protected void get(Router router) {
@@ -79,9 +79,21 @@ public class ServerREST extends AbstractVerticle{
                 LOG.log(Level.INFO, "data POSTED on the server {0}", ctx.getBodyAsString());
             }
             Book book = new Gson().fromJson(ctx.getBodyAsString(), Book.class);
-            bookDAO.save(book);
-            response.end("success");
+            book = bookDAO.save(book);
+            response.end(new Gson().toJson(book));
         });
     }
     
+    protected void update(Router router) {
+        router.put("/books").handler( ctx -> {
+            HttpServerResponse response = ctx.response();
+            response.putHeader("content-type", "application/json");
+            if(LOG.isLoggable(Level.INFO)){
+                LOG.log(Level.INFO, "data PUT on the server {0}", ctx.getBodyAsString());
+            }
+            Book book = new Gson().fromJson(ctx.getBodyAsString(), Book.class);
+            bookDAO.update(book);
+            response.end("success");
+        });
+    }
 }

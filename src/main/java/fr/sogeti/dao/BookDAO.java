@@ -48,4 +48,10 @@ public class BookDAO {
         books.remove(id);
     }
     
+    public void update(Book book){
+        if(books.containsKey(book.getId())){
+            books.put(book.getId(), book);
+        }
+    }
+    
 }
