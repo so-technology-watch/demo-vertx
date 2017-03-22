@@ -93,7 +93,7 @@ public class ServerREST extends AbstractVerticle{
     		response.putHeader("content-type", "text/plain");
     		
     		if(LOG.isLoggable(Level.INFO)){
-    			LOG.log(Level.INFO, "Book with id: " + id + " is about to be deleted");
+    			LOG.log(Level.INFO, "Book with id: {0} is about to be deleted", id);
     		}
     		
     		bookDAO.delete(id);
