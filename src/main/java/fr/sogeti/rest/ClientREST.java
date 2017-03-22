@@ -100,4 +100,18 @@ public class ClientREST extends AbstractVerticle{
           });
     }
     
+    
+    public void delete(int id){
+    	
+    	WebClient client = WebClient.create(vertx);
+    	
+    	client.delete(8080, "localhost", "/books").send(ar -> {
+    		
+            HttpResponse<Buffer> response = ar.result();
+         
+    		
+    	});
+    	
+    }
+    
 }
