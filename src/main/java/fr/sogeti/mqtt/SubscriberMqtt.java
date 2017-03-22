@@ -35,12 +35,12 @@ public class SubscriberMqtt extends AbstractVerticle{
 			MqttClient client = new MqttClient(broker, clientId, persistence);
 			MqttConnectOptions connectOptions = new MqttConnectOptions();
 			connectOptions.setCleanSession(true);
+			client.setCallback(new MessageCallback());
 			LOG.log(Level.INFO, "Connecting to broker: {0}", broker);
 			client.connect();
 			LOG.log(Level.INFO, "Connected to broker");
 			client.subscribe(topic);
 			LOG.log(Level.INFO, "Subscibed to: {0}", topic);
-			client.setCallback(new MessageCallback());
 			
 			client .disconnect();
 			LOG.log(Level.INFO, "Disconnected from broker");

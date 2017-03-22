@@ -27,8 +27,9 @@ public class MessageCallback implements MqttCallback{
 	@Override
 	public void messageArrived(String arg0, MqttMessage arg1) throws Exception {
 
-		System.out.println("Message reçu: " +  arg1);
 
+		LOG.log(Level.INFO, "Message recieved: {0}", arg1);
+		System.exit(0);
 	}
 
 }

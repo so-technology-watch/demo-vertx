@@ -12,27 +12,27 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import io.vertx.core.AbstractVerticle;
 
 public class PublisherMqtt extends AbstractVerticle{
-	
+
 
 	private String broker = "tcp://localhost:1883";
 	private String clientId;
 	private String topic;
 	private String message;
 	private MemoryPersistence persistence = new MemoryPersistence();
-    private static final Logger LOG = Logger.getLogger(PublisherMqtt.class.getName());
-    
-    public PublisherMqtt(String clientId, String topic, String message) {
-    	
-    	this.clientId = clientId;
-    	this.message = message;
-    	this.topic = topic;
+	private static final Logger LOG = Logger.getLogger(PublisherMqtt.class.getName());
+
+	public PublisherMqtt(String clientId, String topic, String message) {
+
+		this.clientId = clientId;
+		this.message = message;
+		this.topic = topic;
 	}
-    
-    
-    public void start(){
-    	
-    	
-    	try {
+
+
+	public void start(){
+
+
+		try {
 			MqttClient client = new MqttClient(broker, clientId, persistence);
 			MqttConnectOptions connectOptions = new MqttConnectOptions();
 			connectOptions.setCleanSession(true);
@@ -47,13 +47,13 @@ public class PublisherMqtt extends AbstractVerticle{
 			LOG.log(Level.INFO, "The message has been published");
 			client .disconnect();
 			LOG.log(Level.INFO, "Disconnected from broker");
-			
+
 		} catch (MqttException | InterruptedException e) {
-			
+
 			LOG.log(Level.INFO, "Something went wrong: {0}", e);
 		}
-    	
-    }
+
+	}
 
 
 }
