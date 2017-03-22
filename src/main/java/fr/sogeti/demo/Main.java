@@ -1,5 +1,6 @@
 package fr.sogeti.demo;
 
+import fr.sogeti.mqtt.PublisherMqtt;
 import fr.sogeti.mqtt.ServerMqtt;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
@@ -10,6 +11,7 @@ public class Main extends AbstractVerticle  {
         //vertx.deployVerticle(new ServerREST());
         //vertx.deployVerticle(new ClientREST());
         vertx.deployVerticle(new ServerMqtt());
+        vertx.deployVerticle(new PublisherMqtt("pub1", "topic1", "message1"));
     }
     
 }
