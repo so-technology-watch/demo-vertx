@@ -96,4 +96,22 @@ public class ServerREST extends AbstractVerticle{
             response.end("success");
         });
     }
+    
+    protected void delete(Router router) {
+    	
+    	router.delete("/books").handler(ctx -> {
+    		
+    		int id = Integer.parseInt(ctx.request().getParam("id"));
+    		HttpServerResponse response = ctx.response();
+    		response.putHeader("content-type", "text/plain");
+    		
+    		if(LOG.isLoggable(Level.INFO)){
+    			LOG.log(Level.INFO, "Book with id: " + id + " is about to be deleted");
+    		}
+    		
+    		bookDAO.delete(id);
+    		response.end("success");
+    	});
+    }
+    
 }
