@@ -19,7 +19,7 @@ public class PublisherMqtt extends AbstractVerticle{
 	private String topic;
 	private String message;
 	private MemoryPersistence persistence = new MemoryPersistence();
-    private static final Logger LOG = Logger.getLogger(ServerMqtt.class.getName());
+    private static final Logger LOG = Logger.getLogger(PublisherMqtt.class.getName());
     
     public PublisherMqtt(String clientId, String topic, String message) {
     	
@@ -42,12 +42,13 @@ public class PublisherMqtt extends AbstractVerticle{
 			LOG.log(Level.INFO, "Publishing message: {0}", message);
 			MqttMessage msg = new MqttMessage(message.getBytes());
 			msg.setQos(1);
+			Thread.sleep(1000);
 			client.publish(topic, msg);
 			LOG.log(Level.INFO, "The message has been published");
 			client .disconnect();
 			LOG.log(Level.INFO, "Disconnected from broker");
 			
-		} catch (MqttException e) {
+		} catch (MqttException | InterruptedException e) {
 			
 			LOG.log(Level.INFO, "Something went wrong: {0}", e);
 		}

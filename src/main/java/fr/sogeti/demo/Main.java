@@ -13,8 +13,9 @@ public class Main extends AbstractVerticle  {
         //vertx.deployVerticle(new ServerREST());
         //vertx.deployVerticle(new ClientREST());
         vertx.deployVerticle(new ServerMqtt());
+        vertx.deployVerticle(new SubscriberMqtt("Sub1", "topic1"));
         vertx.deployVerticle(new PublisherMqtt("pub1", "topic1", "message1"));
-        vertx.deployVerticle(new SubscriberMqtt("Sub1", "topic"));
+
     }
     
 }

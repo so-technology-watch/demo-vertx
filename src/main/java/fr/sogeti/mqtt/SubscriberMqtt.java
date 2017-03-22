@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import io.vertx.core.AbstractVerticle;
@@ -18,7 +17,7 @@ public class SubscriberMqtt extends AbstractVerticle{
 	private String clientId;
 	private String topic;
 	private MemoryPersistence persistence = new MemoryPersistence();
-    private static final Logger LOG = Logger.getLogger(ServerMqtt.class.getName());
+    private static final Logger LOG = Logger.getLogger(SubscriberMqtt.class.getName());
 	
     
     
@@ -42,6 +41,7 @@ public class SubscriberMqtt extends AbstractVerticle{
 			client.subscribe(topic);
 			LOG.log(Level.INFO, "Subscibed to: {0}", topic);
 			client.setCallback(new MessageCallback());
+			
 			client .disconnect();
 			LOG.log(Level.INFO, "Disconnected from broker");
 			
