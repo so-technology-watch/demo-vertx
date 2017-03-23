@@ -1,38 +1,121 @@
 package fr.sogeti.microservice.api.mqtt;
 
-import java.util.Map;
+import com.google.gson.Gson;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 /**
  *
  * @author fduneau
  */
 public class MqttAccess<T> implements IMqttAccess<T>{
-    protected String route;
+    private static final Logger LOG = Logger.getLogger(MqttAccess.class.getName());
     
-    public MqttAccess(String route){
+    protected final String route;
+    protected final IClientMqtt clientMqtt;
+    private final String publishRoute;
+    private final String deliverRoute;
+    private final String idClient;
+    
+    
+    public MqttAccess(String url, String route, String idClient) throws MqttException {
         this.route = route;
+        this.idClient = idClient;
+        publishRoute = "publish"+route;
+        deliverRoute = "deliver"+route;
+        try{
+            clientMqtt = new ClientMqtt(url, idClient);
+            clientMqtt.connect();
+        }catch(MqttException e){
+            if(LOG.isLoggable(Level.SEVERE)){
+                LOG.log(Level.SEVERE, "Unable to instanciate the Mqtt client : {0}", e.getMessage());
+            }
+            throw e;
+        }
     }
     
     @Override
-    public Map<Integer, T> getAll() {
-        return null;
+    public void getAll(Function<String, Void> callback) {
+        String pubSub = publishRoute+"/GETALL";
+        String delSub = deliverRoute+"/GETALL";
+        
+        clientMqtt.subscribe(pubSub);
+        clientMqtt.subscribe(delSub);
+        clientMqtt.sendMessage("",publishRoute , 2);
+        
+        clientMqtt.setCallback(new MessageCallback( response -> {
+            callback.apply(response);
+            clientMqtt.unsubscribe(pubSub, delSub);
+            return null;
+        }));
     }
 
     @Override
-    public T get(int id) {
-        return null;
+    public void get(int id, Function<String, Void> callback) {
+        String pubSub = publishRoute+"/GET/"+id;
+        String delSub = deliverRoute+"/GET/"+id;
+        
+        clientMqtt.subscribe(pubSub);
+        clientMqtt.subscribe(delSub);
+        clientMqtt.sendMessage("",publishRoute , 2);
+        
+        clientMqtt.setCallback(new MessageCallback( response -> {
+            callback.apply(response);
+            clientMqtt.unsubscribe(pubSub, delSub);
+            return null;
+        }));
     }
 
     @Override
-    public T save(T t) {
-        return null;
+    public void save(T t, Function<String, Void> callback) {
+        Gson gson = new Gson();
+        String pubSub = publishRoute+"/POST/"+idClient;
+        String delSub = deliverRoute+"/POST/"+idClient;
+        
+        clientMqtt.subscribe(pubSub);
+        clientMqtt.subscribe(delSub);
+        clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
+        
+        clientMqtt.setCallback(new MessageCallback( response -> {
+            callback.apply(response);
+            clientMqtt.unsubscribe(pubSub, delSub);
+            return null;
+        }));
     }
 
     @Override
-    public void update(T t) {
+    public void update(T t, Function<String, Void> callback) {
+        Gson gson = new Gson();
+        String pubSub = publishRoute+"/PUT/"+idClient;
+        String delSub = deliverRoute+"/PUT/"+idClient;
+        
+        clientMqtt.subscribe(pubSub);
+        clientMqtt.subscribe(delSub);
+        clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
+        
+        clientMqtt.setCallback(new MessageCallback( response -> {
+            callback.apply(response);
+            clientMqtt.unsubscribe(delSub, pubSub);
+            return null;
+        }));
     }
     
     @Override
-    public void delete(int id) {
+    public void delete(int id, Function<String, Void> callback) {
+        String pubSub = publishRoute+"/DELETE/"+id;
+        String delSub = deliverRoute+"/DELETE/"+id;
+        
+        clientMqtt.subscribe(pubSub);
+        clientMqtt.subscribe(delSub);
+        clientMqtt.sendMessage(""+id, publishRoute , 2);
+        
+        clientMqtt.setCallback(new MessageCallback( response -> {
+            callback.apply(response);
+            clientMqtt.unsubscribe(delSub, pubSub);
+            return null;
+        }));
     }
+    
 }
