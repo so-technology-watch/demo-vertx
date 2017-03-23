@@ -12,26 +12,27 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 /**
  *
  * @author fduneau
  * T the type object the objejct manipulated by this verticle
  */
-public class RestVerticle<T> extends AbstractVerticle{
+public class RestVerticle<T> extends AbstractVerticle {
     public static final String JSON_MIME = "application/json";
     private static final Logger LOG = Logger.getLogger(RestVerticle.class.getName());
 
-    private final IMqttAccess<T> accessMqtt;
+    private IMqttAccess<T> accessMqtt;
     private final Class<T> clazz;
     public final String route;
     private final int port;
 
-    public RestVerticle(String route, int port, Class<T> clazz){
+    public RestVerticle(String url, String route, int port, String clientId, Class<T> clazz) throws MqttException{
         this.route = route;
         this.port = port;
         this.clazz = clazz;
-        accessMqtt = new MqttAccess<>(route);
+        accessMqtt = new MqttAccess<>(url, route, clientId);
     }
     
     @Override
@@ -41,26 +42,25 @@ public class RestVerticle<T> extends AbstractVerticle{
         
         router.get(route)
             .produces(JSON_MIME)
-            .consumes(JSON_MIME)
             .handler(this::handleGetRequest)
             .failureHandler(this::handleError);
         router.post(route)
             .produces(JSON_MIME)
-            .consumes(JSON_MIME)
             .handler(this::handlePostRequest)
             .failureHandler(this::handleError);
         router.put(route)
             .produces(JSON_MIME)
-            .consumes(JSON_MIME)
             .handler(this::handlePutRequest)
             .failureHandler(this::handleError);
         router.delete(route)
             .produces(JSON_MIME)
-            .consumes(JSON_MIME)
             .handler(this::handleDeleteRequest)
             .failureHandler(this::handleError);
         
         vertx.createHttpServer().requestHandler(router::accept).listen(port);
+        if(LOG.isLoggable(Level.INFO)){
+            LOG.log(Level.INFO, "Verticle started on route : {0}", route);
+        }
     }
     
     private void handleGetRequest(RoutingContext requestCtx) {
@@ -68,51 +68,51 @@ public class RestVerticle<T> extends AbstractVerticle{
         HttpServerResponse response = requestCtx.response();
         String idStr = request.getParam("id");
         Gson gson = new Gson();
-        String jsonResponse = "";
-        
+
         if(idStr == null){
             // if there is no id, getAll()
-            jsonResponse = gson.toJson(accessMqtt.getAll());
+            accessMqtt.getAll( json -> {
+                response.end(gson.toJson(json));
+                return null;
+            } );
         }else{
             if(isInteger(idStr)){
                 int id = Integer.parseInt(idStr);
-                T type = accessMqtt.get(id);
-                if(accessMqtt != null){
-                    jsonResponse = gson.toJson(type);
-                }
+                accessMqtt.get(id , json -> {
+                    response.end(json);
+                    return null;
+                } );
             }
         }
-        
-        response.end(jsonResponse);
     }
     
     private void handlePostRequest(RoutingContext requestCtx) {
         HttpServerResponse response = requestCtx.response();
         Gson gson = new Gson();
-        String jsonResponse = "";
         String bookJson = requestCtx.getBodyAsString();
         
         if(bookJson != null){
             T type = gson.fromJson(bookJson, clazz);
-            type = accessMqtt.save(type);
-            jsonResponse = gson.toJson(type);
+            accessMqtt.save(type, json -> {
+                response.end(json);
+                return null;
+            });
         }
         
-        response.end(jsonResponse);
     }
     
     private void handlePutRequest(RoutingContext requestCtx) {
         HttpServerResponse response = requestCtx.response();
         Gson gson = new Gson();
-        String jsonResponse = "";
         String bookStr = requestCtx.getBodyAsString();
         
         if(bookStr != null){
             T book = gson.fromJson(bookStr, clazz);
-            accessMqtt.update(book);
+            accessMqtt.update(book, json -> {
+                response.end(json);
+                return null;
+            });
         }
-        
-        response.end(jsonResponse);
     }
     
     private void handleDeleteRequest(RoutingContext requestCtx) {
@@ -123,10 +123,11 @@ public class RestVerticle<T> extends AbstractVerticle{
         
         if(idStr != null && isInteger(idStr)){
             int id = Integer.parseInt(idStr);
-            accessMqtt.delete(id);
+            accessMqtt.delete(id, json -> {
+                response.setStatusCode(HttpResponseStatus.OK.code());
+                return null;
+            });
         }
-        
-        response.setStatusCode(HttpResponseStatus.OK.code());
     }
 
     private void handleError(RoutingContext failure) {
@@ -138,5 +139,9 @@ public class RestVerticle<T> extends AbstractVerticle{
     
     private boolean isInteger(String idStr){
         return idStr.matches("\\d+");
+    }
+    
+    protected Class<T> getType(){
+        return clazz;
     }
 }
