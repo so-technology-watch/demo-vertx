@@ -1,59 +1,40 @@
 package fr.sogeti.mqtt;
 
+import io.vertx.core.AbstractVerticle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-
-import io.vertx.core.AbstractVerticle;
 
 public class PublisherMqtt extends AbstractVerticle{
 
 
-	private String broker = "tcp://localhost:1883";
-	private String clientId;
-	private String topic;
-	private String message;
-	private MemoryPersistence persistence = new MemoryPersistence();
 	private static final Logger LOG = Logger.getLogger(PublisherMqtt.class.getName());
+    private final ClientMqtt client;
+    private String message;
 
-	public PublisherMqtt(String clientId, String topic, String message) {
-
-		this.clientId = clientId;
-		this.message = message;
-		this.topic = topic;
+	public PublisherMqtt(String clientId, String topic, String message, String brokerUrl) throws MqttException{
+        this.message = message;
+		client = new ClientMqtt(brokerUrl, clientId, topic);
 	}
 
-
+    @Override
 	public void start(){
 
-
 		try {
-			MqttClient client = new MqttClient(broker, clientId, persistence);
-			MqttConnectOptions connectOptions = new MqttConnectOptions();
-			connectOptions.setCleanSession(true);
-			LOG.log(Level.INFO, "Connecting to broker: {0}", broker);
-			client.connect();
-			LOG.log(Level.INFO, "Connected to broker");
-			LOG.log(Level.INFO, "Publishing message: {0}", message);
-			MqttMessage msg = new MqttMessage(message.getBytes());
-			msg.setQos(1);
-			Thread.sleep(1000);
-			client.publish(topic, msg);
-			LOG.log(Level.INFO, "The message has been published");
-			client .disconnect();
-			LOG.log(Level.INFO, "Disconnected from broker");
-
-		} catch (MqttException | InterruptedException e) {
-
-			LOG.log(Level.INFO, "Something went wrong: {0}", e);
+            initClient();
+		} catch (MqttException e) {
+			if(LOG.isLoggable(Level.SEVERE)){
+                LOG.log(Level.SEVERE, "Client failed to start {0}", e.getMessage());
+            }
 		}
 
 	}
 
-
+    private void initClient() throws MqttException {
+        client.connect();
+        client.sendMessage(message, 0);
+        client.disconnect();
+    }
+    
+    
 }

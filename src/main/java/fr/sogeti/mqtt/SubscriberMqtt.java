@@ -1,54 +1,51 @@
 package fr.sogeti.mqtt;
 
+import io.vertx.core.AbstractVerticle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import io.vertx.core.AbstractVerticle;
-
 public class SubscriberMqtt extends AbstractVerticle{
 	
-
-	private String broker = "tcp://localhost:1883";
 	private String clientId;
 	private String topic;
 	private MemoryPersistence persistence = new MemoryPersistence();
     private static final Logger LOG = Logger.getLogger(SubscriberMqtt.class.getName());
-	
+	private final String brokerUrl;
+    private final ClientMqtt client;
     
     
-    public SubscriberMqtt(String clientId, String topic) {
+    public SubscriberMqtt(String clientId, String topic, String brokerUrl) throws MqttException{
 
     	this.clientId = clientId;
     	this.topic = topic;
-    	
-    	
+    	this.brokerUrl = brokerUrl;
+        
+        client = new ClientMqtt(brokerUrl, clientId, topic);
     }
 	
+    
+    @Override
 	public void start(){
-		
-		try {
-			MqttClient client = new MqttClient(broker, clientId, persistence);
-			MqttConnectOptions connectOptions = new MqttConnectOptions();
-			connectOptions.setCleanSession(true);
-			client.setCallback(new MessageCallback());
-			LOG.log(Level.INFO, "Connecting to broker: {0}", broker);
-			client.connect();
-			LOG.log(Level.INFO, "Connected to broker");
-			client.subscribe(topic);
-			LOG.log(Level.INFO, "Subscibed to: {0}", topic);
-			
-			client .disconnect();
-			LOG.log(Level.INFO, "Disconnected from broker");
-			
-		} catch (MqttException e) {
-			
-			LOG.log(Level.INFO, "Something went wrong: {0}", e);
-		}
+        try{
+            initClient();
+        }catch(MqttException e){
+            if(LOG.isLoggable(Level.SEVERE)){
+                LOG.log(Level.SEVERE, "Client failed to start {0}", e.getMessage());
+            }
+        }
 	}
+    
+    private void initClient() throws MqttException{
+        client.getClient().setCallback(new MessageCallback());
+        client.connect();
+
+        client.getClient().subscribe(topic, 0);
+        
+        LOG.log(Level.INFO, "SUBSCRIBER Client subscribed to the topic : {0}", topic);
+        
+        client.disconnect();
+    }
 
 }
