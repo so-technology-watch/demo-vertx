@@ -9,7 +9,8 @@ public class Main {
 	public static void main(String[] args) {
 
 		Vertx vertx = Vertx.vertx();
-		//vertx.deployVerticle();
+		VerticleBooks verticleBooks = new VerticleBooks(BROKER_URL, "microServiceMQTT");
+		vertx.deployVerticle(verticleBooks);
 
 		
 	}

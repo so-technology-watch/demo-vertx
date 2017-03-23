@@ -27,11 +27,10 @@ public class ClientMqtt {
 	private static final Logger LOG = Logger.getLogger(ClientMqtt.class.getName());
 	private final MqttClient client;
 
-	public ClientMqtt(String brokerUrl, String clientId, String topic) throws MqttException{
+	public ClientMqtt(String brokerUrl, String clientId) throws MqttException{
 		
 		this.brokerUrl = brokerUrl;
 		this.clientId = clientId;
-		this.topic = topic;
 		this.client = new MqttClient(brokerUrl, clientId, persistence);
 	}
 

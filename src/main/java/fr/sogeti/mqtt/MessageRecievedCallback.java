@@ -3,6 +3,8 @@ package fr.sogeti.mqtt;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -14,12 +16,15 @@ import com.google.gson.reflect.TypeToken;
 
 import fr.sogeti.dao.BookDAO;
 import fr.sogeti.domain.Book;
+import fr.sogti.main.VerticleBooks;
 
 public class MessageRecievedCallback implements MqttCallback{
 
 	private BooksMqtt booksMqtt;
 	private BookDAO bookDAO;
 	private Gson gson = new Gson();
+    private static final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
+
 
 	public MessageRecievedCallback(BooksMqtt booksMqtt) {
 
@@ -40,6 +45,8 @@ public class MessageRecievedCallback implements MqttCallback{
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 
+		LOG.log(Level.INFO, "Message sent on: {0}", topic);
+		
 		if (topic.matches("publish/books/GET/.+")){
 
 			if (topic == "publish/books/GET"){
@@ -78,9 +85,13 @@ public class MessageRecievedCallback implements MqttCallback{
 		} catch (MqttException e) {
 			e.printStackTrace();
 		}
+		
+		LOG.log(Level.INFO, "REQUEST GET HAST BEEN HANDLED.");
+
 	}
 
 	public void handleGetAll(){
+		
 		
 		Type listType = new TypeToken<Map<Integer, Book>>(){}.getType();
 		try {
@@ -88,9 +99,13 @@ public class MessageRecievedCallback implements MqttCallback{
 		} catch (MqttException e) {
 			e.printStackTrace();
 		}
+		
+		LOG.log(Level.INFO, "REQUEST GETALL HAST BEEN HANDLED.");
+
 	}
 
 	public void handlePost(MqttMessage message, int id){
+
 
 		
 		Book book = bookDAO.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class));
@@ -100,9 +115,12 @@ public class MessageRecievedCallback implements MqttCallback{
 			e.printStackTrace();
 		}
 
+		LOG.log(Level.INFO, "REQUEST POST HAST BEEN HANDLED.");
+
 	}
 
 	public void handlePut(int id, MqttMessage message){
+		
 
 		Book updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class);
 		bookDAO.update(updatedBook);
@@ -111,9 +129,13 @@ public class MessageRecievedCallback implements MqttCallback{
 		} catch (MqttException e) {
 			e.printStackTrace();
 		}
+		
+		LOG.log(Level.INFO, "REQUEST PUT HAST BEEN HANDLED.");
+
 	}
 
 	public void handleDelete(int id){
+		
 
 		bookDAO.delete(id);
 		try {
@@ -122,6 +144,8 @@ public class MessageRecievedCallback implements MqttCallback{
 			e.printStackTrace();
 		}
 		
+		LOG.log(Level.INFO, "REQUEST DELETe HAST BEEN HANDLED.");
+
 	}
 
 	private int extractId(String topic){

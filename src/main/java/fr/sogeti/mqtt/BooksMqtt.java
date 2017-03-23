@@ -11,12 +11,10 @@ public class BooksMqtt extends ClientMqtt{
 
 	private final String PUBLISH_TOPIC = "publish/books";
 	private final String DELIVER_TOPIC = "deliver/books";
-	private String serverURI;
-	private String clientId;
     private static final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
 	
-	public BooksMqtt(String brokerUrl, String clientId, String topic) throws MqttException {
-		super(brokerUrl, clientId, topic);
+	public BooksMqtt(String brokerUrl, String clientId) throws MqttException {
+		super(brokerUrl, clientId);
 	}
 	
 	
