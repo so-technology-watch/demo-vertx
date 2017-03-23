@@ -38,14 +38,19 @@ public class SubscriberMqtt extends AbstractVerticle{
 	}
     
     private void initClient() throws MqttException{
-        client.getClient().setCallback(new MessageCallback());
-        client.connect();
-
-        client.getClient().subscribe(topic, 0);
+    	
+    	//C'est un peu du bricolage à amélorer
+        client.getClient().setCallback(new MessageCallback( vo -> {
+        	new Thread(() -> {
+        		client.disconnect();
+        	}).start();
+        	return null; 
+    	} ));
         
+        client.connect();
+        client.getClient().subscribe(topic, 0);
         LOG.log(Level.INFO, "SUBSCRIBER Client subscribed to the topic : {0}", topic);
         
-        client.disconnect();
     }
 
 }

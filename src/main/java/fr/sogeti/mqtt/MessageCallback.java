@@ -1,5 +1,6 @@
 package fr.sogeti.mqtt;
 
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -9,8 +10,11 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class MessageCallback implements MqttCallback{
 	
     private static final Logger LOG = Logger.getLogger(MessageCallback.class.getName());
-
-
+    private final Function<Void, Void> callbackMessageArrived;
+    public MessageCallback(Function<Void, Void> callbackMessageArrived) {
+    	this.callbackMessageArrived = callbackMessageArrived;
+	}
+    
 	@Override
 	public void connectionLost(Throwable arg0) {
 		LOG.log(Level.INFO, "MessageCallback: connectionLost {0}", arg0);
@@ -26,6 +30,7 @@ public class MessageCallback implements MqttCallback{
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		LOG.log(Level.INFO, "MessageCallback: Message recieved: {0}", message);
+		callbackMessageArrived.apply(null);
 	}
 
 }

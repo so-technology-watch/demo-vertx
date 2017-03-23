@@ -6,7 +6,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 public class Main extends AbstractVerticle  {
 
-    public static final String BROKER_URL = "tcp://localhost:1883";
+    public static final String BROKER_URL = "tcp://10.226.159.191:1883";
 
     public static void main(String[] args) throws Exception {
         Vertx vertx = Vertx.vertx();

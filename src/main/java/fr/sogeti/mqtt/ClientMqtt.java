@@ -48,6 +48,7 @@ public class ClientMqtt {
                 client.connect();
                 if(LOG.isLoggable(Level.INFO)){
                     LOG.log(Level.INFO, "Client connected {0}", client.getClientId());
+                    LOG.log(Level.INFO, "Connected to {0}", brokerUrl);
                 }
             }
         }catch(MqttException e){
