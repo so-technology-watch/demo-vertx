@@ -2,6 +2,7 @@ package fr.sogeti.microservice.zookeeper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,6 +78,10 @@ public class ZookeeperManager implements IZookeeperManager {
         return result;
     }
     
+    @Override
+    public List<String> getListSubNodes(String baseNode) throws KeeperException, InterruptedException {
+        return zoo.getChildren(baseNode, true);
+    }
     @Override
     public void close() throws InterruptedException {
         zoo.close();

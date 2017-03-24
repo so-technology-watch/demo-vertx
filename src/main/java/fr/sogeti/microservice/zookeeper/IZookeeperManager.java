@@ -1,5 +1,6 @@
 package fr.sogeti.microservice.zookeeper;
 
+import java.util.List;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 
@@ -60,6 +61,15 @@ public interface IZookeeperManager {
      * @throws InterruptedException 
      */    
     String getData(String path) throws KeeperException, InterruptedException;
+    
+    /**
+     * 
+     * @param baseNode the base node's path
+     * @return the list of available sub nodes for the given node
+     * @throws KeeperException
+     * @throws InterruptedException 
+     */
+    List<String> getListSubNodes(String baseNode) throws KeeperException, InterruptedException;
     
     /**
      * closes the zooKeeper
