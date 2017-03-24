@@ -2,6 +2,7 @@ package fr.sogeti.mqtt;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,34 +15,49 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import fr.sogeti.dao.BookDAO;
+import fr.sogeti.dao.DAO;
 import fr.sogeti.domain.Book;
+import fr.sogeti.domain.Element;
 import fr.sogeti.vertx.VerticleBooks;
 
-public class MessageRecievedCallback implements MqttCallback {
+public class MessageRecievedCallback<T extends Element> implements MqttCallback {
 
-    private BooksMqtt booksMqtt;
-    private BookDAO bookDAO;
+    private ElementsMqtt<T> elementsMqtt;
+    private DAO<T> dao;
+    private Class<T> clazz;
     private Gson gson = new Gson();
-    private static final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
+    private final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
     // Paths to the different topics under publishing.
-    private static final String GET_PUBLISHING_PATH = BooksMqtt.PUBLISH_TOPIC + "/GET/.+";
-    private static final String GETALL_PUBLISHING_PATH = BooksMqtt.PUBLISH_TOPIC + "/GETALL";
-    private static final String POST_PUBLISHING_PATH = BooksMqtt.PUBLISH_TOPIC + "/POST/.+";
-    private static final String PUT_PUBLISHING_PATH = BooksMqtt.PUBLISH_TOPIC + "/PUT/.+";
-    private final String DELETE_PUBLISHING_PATH = BooksMqtt.PUBLISH_TOPIC + "/DELETE/.+";
+    private final String getPublishingPath;
+    private final String getallPublishingPath;
+    private final String postPublishingPath;
+    private final String putPublishingPath;
+    private final String deletePublishingPath;
     // Paths to the different topics under delivery.
-    private static final String GET_DELIVERY_PATH = BooksMqtt.DELIVER_TOPIC + "/GET/";
-    private static final String GETALL_DELIVERY_PATH = BooksMqtt.DELIVER_TOPIC + "/GETALL";
-    private static final String POST_DELIVERY_PATH = BooksMqtt.DELIVER_TOPIC + "/POST/";
-    private static final String PUT_DELIVERY_PATH = BooksMqtt.DELIVER_TOPIC + "/PUT/";
-    private static final String DELETE_DELIVETY_PATH = BooksMqtt.DELIVER_TOPIC + "/DELETE/";
-    private static final String VOID_DELIVETY_PATH = BooksMqtt.DELIVER_TOPIC;
+    private final String getDeliveryPath;
+    private final String getallDeliveryPath;
+    private final String postDeliveryPath;
+    private final String putDeliveryPath;
+    private final String deleteDeliveryPath;
+    private final String voidDeliveryPath;
 
-    public MessageRecievedCallback(BooksMqtt booksMqtt) {
+    public MessageRecievedCallback(ElementsMqtt<T> elementsMqtt, Class<T> clazz) {
 
-	this.booksMqtt = booksMqtt;
-	this.bookDAO = new BookDAO();
+	this.elementsMqtt = elementsMqtt;
+	this.clazz = clazz;
+	this.dao = new DAO<T>(new HashMap<Integer, T>());
+	getPublishingPath = elementsMqtt.getPublishTopic() + "/GET/.+";
+	getallPublishingPath = elementsMqtt.getPublishTopic() + "/GETALL";
+	postPublishingPath = elementsMqtt.getPublishTopic() + "/POST/.+";
+	putPublishingPath = elementsMqtt.getPublishTopic() + "/PUT/.+";
+	deletePublishingPath = elementsMqtt.getPublishTopic() + "/DELETE/.+";
+	getallDeliveryPath = elementsMqtt.getDeliverTopic() + "/GETALL";
+	getDeliveryPath = elementsMqtt.getDeliverTopic() + "/GET/.+";
+	postDeliveryPath = elementsMqtt.getDeliverTopic() + "/POST/.+";
+	putDeliveryPath = elementsMqtt.getDeliverTopic() + "/PUT/.+";
+	deleteDeliveryPath = elementsMqtt.getDeliverTopic() + "/DELETE/.+";
+	voidDeliveryPath = elementsMqtt.getDeliverTopic();
+
     }
 
     @Override
@@ -60,23 +76,23 @@ public class MessageRecievedCallback implements MqttCallback {
 	LOG.log(Level.INFO, "Message sent on: {0}", topic);
 	LOG.log(Level.INFO, "Message: {0}", new String(message.getPayload()));
 
-	if (topic.matches(GET_PUBLISHING_PATH)) {
+	if (topic.matches(getPublishingPath)) {
 
 	    handleGet(extractId(topic));
 
-	} else if (topic.equals(GETALL_PUBLISHING_PATH)) {
+	} else if (topic.equals(getallPublishingPath)) {
 
 	    handleGetAll();
 
-	} else if (topic.matches(POST_PUBLISHING_PATH)) {
+	} else if (topic.matches(postPublishingPath)) {
 
 	    handlePost(message, extractId(topic));
 
-	} else if (topic.matches(PUT_PUBLISHING_PATH)) {
+	} else if (topic.matches(putPublishingPath)) {
 
 	    handlePut(extractId(topic), message);
 
-	} else if (topic.matches(DELETE_PUBLISHING_PATH)) {
+	} else if (topic.matches(deletePublishingPath)) {
 
 	    handleDelete(extractId(topic));
 
@@ -97,8 +113,8 @@ public class MessageRecievedCallback implements MqttCallback {
     public void handleGet(int id) {
 
 	try {
-	    System.out.println(gson.toJson(bookDAO.get(id)));
-	    booksMqtt.sendMessage(gson.toJson(bookDAO.get(id)), 2, GET_DELIVERY_PATH + id);
+	    System.out.println(gson.toJson(dao.get(id)));
+	    elementsMqtt.sendMessage(gson.toJson(dao.get(id)), 2, getDeliveryPath + id);
 
 	} catch (MqttException e) {
 
@@ -118,7 +134,7 @@ public class MessageRecievedCallback implements MqttCallback {
 	Type listType = new TypeToken<Map<Integer, Book>>() {
 	}.getType();
 	try {
-	    booksMqtt.sendMessage(gson.toJson(bookDAO.getAll(), listType), 2, GETALL_DELIVERY_PATH);
+	    elementsMqtt.sendMessage(gson.toJson(dao.getAll(), listType), 2, getallDeliveryPath);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -137,9 +153,9 @@ public class MessageRecievedCallback implements MqttCallback {
 
     public void handlePost(MqttMessage message, int id) {
 
-	Book book = bookDAO.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class));
+	T element = dao.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), clazz));
 	try {
-	    booksMqtt.sendMessage(gson.toJson(book), 2, POST_DELIVERY_PATH + id);
+	    elementsMqtt.sendMessage(gson.toJson(element), 2, postDeliveryPath + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -157,10 +173,10 @@ public class MessageRecievedCallback implements MqttCallback {
      */
     public void handlePut(int id, MqttMessage message) {
 
-	Book updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class);
-	bookDAO.update(updatedBook);
+	T updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), clazz);
+	dao.update(updatedBook);
 	try {
-	    booksMqtt.sendMessage("DONE", 2, PUT_DELIVERY_PATH + id);
+	    elementsMqtt.sendMessage("DONE", 2, putDeliveryPath + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -177,9 +193,9 @@ public class MessageRecievedCallback implements MqttCallback {
      */
     public void handleDelete(int id) {
 
-	bookDAO.delete(id);
+	dao.delete(id);
 	try {
-	    booksMqtt.sendMessage("DONE", 2, DELETE_DELIVETY_PATH + id);
+	    elementsMqtt.sendMessage("DONE", 2, deleteDeliveryPath + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -196,7 +212,7 @@ public class MessageRecievedCallback implements MqttCallback {
     public void handleVoid() {
 
 	try {
-	    booksMqtt.sendMessage("UNKNOWN PATH", 2, VOID_DELIVETY_PATH);
+	    elementsMqtt.sendMessage("UNKNOWN PATH", 2, voidDeliveryPath);
 	    LOG.log(Level.INFO, "REQUEST HAS NOT BEEN HANDLED");
 
 	} catch (MqttException e) {

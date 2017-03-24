@@ -5,78 +5,91 @@
  */
 package fr.sogeti.dao;
 
-import fr.sogeti.domain.Book;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+
+import fr.sogeti.domain.Element;
+
+
 
 /**
  *
  * @author fduneau
  */
-public class BookDAO {
+public class DAO<T extends Element> {
 
-    private final Map<Integer, Book> books;
+    private final Map<Integer, T> elements;
 
-    public BookDAO() {
-	books = new HashMap<>();
-	books.put(1, new Book(1, "Le chien de baskeville", "S A. Conan Doyles"));
-	books.put(2, new Book(2, "Une étude en rouge", "S A. Conan Doyles"));
+    public DAO(Map<Integer,T> elements) {
+	this.elements = elements;
+
     }
 
     /**
-     * Returns all the elements. 
+     * Returns all the elements.
+     * 
      * @return
      */
-    public Map<Integer, Book> getAll() {
-	return books;
+    public Map<Integer, T> getAll() {
+
+	return elements;
     }
 
     /**
      * Returns a single element corresponding to the given id.
+     * 
      * @param id
      * @return
      */
-    public Book get(Integer id) {
-	return books.get(id);
+    public T get(Integer id) {
+
+	return elements.get(id);
     }
 
     /**
      * Adds a new element.
+     * 
      * @param book
      * @return
      */
-    public Book save(Book book) {
-	if (book.getId() == null) {
-	    book.setId(nextId());
+    public T save(T element) {
+
+	if (element.getId() == null) {
+	    element.setId(nextId());
 	}
-	books.put(book.getId(), book);
-	return book;
+	elements.put(element.getId(), element);
+	return element;
     }
 
     /**
      * Increments the id in the collection and then points to it.
+     * 
      * @return
      */
     private Integer nextId() {
-	return Collections.max(books.keySet()) + 1;
+
+	return Collections.max(elements.keySet()) + 1;
     }
 
     /**
      * Removes an element corresponding to the given id.
+     * 
      * @param id
      */
     public void delete(Integer id) {
-	books.remove(id);
+
+	elements.remove(id);
     }
 
     /**
      * Updates the element corresponding to the given id.
+     * 
      * @param book
      */
-    public void update(Book book) {
-	if (books.containsKey(book.getId())) {
-	    books.put(book.getId(), book);
+    public void update(T element) {
+
+	if (elements.containsKey(element.getId())) {
+	    elements.put(element.getId(), element);
 	}
     }
 
