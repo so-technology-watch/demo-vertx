@@ -7,26 +7,24 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import fr.sogeti.mqtt.BooksMqtt;
 import io.vertx.core.AbstractVerticle;
 
-public class VerticleBooks extends AbstractVerticle{
+public class VerticleBooks extends AbstractVerticle {
 
-	BooksMqtt booksMqtt;
+    BooksMqtt booksMqtt;
     private static final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
 
+    public VerticleBooks(String serverURI, String clientId) {
 
-
-	public VerticleBooks(String serverURI, String clientId) {
-
-	 try {
-		this.booksMqtt = new BooksMqtt(serverURI, clientId);
+	try {
+	    this.booksMqtt = new BooksMqtt(serverURI, clientId);
 	} catch (MqttException e) {
-		e.printStackTrace();
+	    e.printStackTrace();
 	}
-	}
+    }
 
-	public void start(){
+    public void start() {
 
-		booksMqtt.launch();
-	
-	}
+	booksMqtt.launch();
+
+    }
 
 }

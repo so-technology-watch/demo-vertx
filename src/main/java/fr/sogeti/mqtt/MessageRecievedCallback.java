@@ -18,141 +18,150 @@ import fr.sogeti.dao.BookDAO;
 import fr.sogeti.domain.Book;
 import fr.sogti.main.VerticleBooks;
 
-public class MessageRecievedCallback implements MqttCallback{
+public class MessageRecievedCallback implements MqttCallback {
 
-	private BooksMqtt booksMqtt;
-	private BookDAO bookDAO;
-	private Gson gson = new Gson();
+    private BooksMqtt booksMqtt;
+    private BookDAO bookDAO;
+    private Gson gson = new Gson();
     private static final Logger LOG = Logger.getLogger(VerticleBooks.class.getName());
 
+    public MessageRecievedCallback(BooksMqtt booksMqtt) {
 
-	public MessageRecievedCallback(BooksMqtt booksMqtt) {
+	this.booksMqtt = booksMqtt;
+	this.bookDAO = new BookDAO();
+    }
 
-		this.booksMqtt = booksMqtt;
-		this.bookDAO = new BookDAO();
-	}
+    @Override
+    public void connectionLost(Throwable arg0) {
 
-	@Override
-	public void connectionLost(Throwable arg0) {
+    }
 
-	}
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken arg0) {
 
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken arg0) {
+    }
 
-	}
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
 
-	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
+	LOG.log(Level.INFO, "Message sent on: {0}", topic);
+	LOG.log(Level.INFO, "Message: {0}", new String(message.getPayload()));
 
-		LOG.log(Level.INFO, "Message sent on: {0}", topic);
-		
-		if (topic.matches("publish/books/GET/.+")){
+	if (topic.matches("publish/books/GET/.+")) {
 
-			if (topic == "publish/books/GET"){
+	    handleGet(extractId(topic));
 
-				handleGetAll();
+	} else if (topic.equals("publish/books/GETALL")) {
 
-			} else {
+	    handleGetAll();
 
+	} else if (topic.matches("publish/books/POST/.+")) {
 
-				handleGet(extractId(topic));
+	    handlePost(message, extractId(topic));
 
-			} 
+	} else if (topic.matches("publish/books/PUT/.+")) {
 
-		} else if (topic.matches("publish/books/POST/.+")){
+	    handlePut(extractId(topic), message);
 
-			handlePost(message, extractId(topic));
+	} else if (topic.matches("publish/books/DELETE/.+")) {
 
-		} else if (topic.matches("publish/books/PUT/.+")) {
-			
-			handlePut(extractId(topic), message);	
-			
-		} else if (topic.matches("publish/books/DELETE/.+")) {
-			
-			handleDelete(extractId(topic));
-			
-		}
+	    handleDelete(extractId(topic));
+
+	} else {
+
+	    handleVoid();
 
 	}
 
+    }
 
-	public void handleGet(int id){
+    public void handleGet(int id) {
 
-		
-		try {
-			booksMqtt.sendMessage(gson.toJson(bookDAO.get(id)), 2, booksMqtt.getDELIVER_TOPIC() + "/GET/:" + id );
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-		
-		LOG.log(Level.INFO, "REQUEST GET HAST BEEN HANDLED.");
+	try {
+	    System.out.println(gson.toJson(bookDAO.get(id)));
+	    booksMqtt.sendMessage(gson.toJson(bookDAO.get(id)), 2, booksMqtt.getDELIVER_TOPIC() + "/GET/" + id);
 
+	} catch (MqttException e) {
+
+	    LOG.log(Level.SEVERE, "{0}", e.getMessage());
 	}
 
-	public void handleGetAll(){
-		
-		
-		Type listType = new TypeToken<Map<Integer, Book>>(){}.getType();
-		try {
-			booksMqtt.sendMessage(gson.toJson(bookDAO.getAll(), listType), 2, booksMqtt.getDELIVER_TOPIC() + "/GETALL" );
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-		
-		LOG.log(Level.INFO, "REQUEST GETALL HAST BEEN HANDLED.");
+	LOG.log(Level.INFO, "REQUEST GET HAST BEEN HANDLED.");
 
+    }
+
+    public void handleGetAll() {
+
+	Type listType = new TypeToken<Map<Integer, Book>>() {
+	}.getType();
+	try {
+	    booksMqtt.sendMessage(gson.toJson(bookDAO.getAll(), listType), 2, booksMqtt.getDELIVER_TOPIC() + "/GETALL");
+	} catch (MqttException e) {
+	    e.printStackTrace();
 	}
 
-	public void handlePost(MqttMessage message, int id){
+	LOG.log(Level.INFO, "REQUEST GETALL HAST BEEN HANDLED.");
 
+    }
 
-		
-		Book book = bookDAO.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class));
-		try {
-			booksMqtt.sendMessage(gson.toJson(book), 2, booksMqtt.getDELIVER_TOPIC() + "/POST/:" + id);
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
+    public void handlePost(MqttMessage message, int id) {
 
-		LOG.log(Level.INFO, "REQUEST POST HAST BEEN HANDLED.");
-
+	Book book = bookDAO.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class));
+	try {
+	    booksMqtt.sendMessage(gson.toJson(book), 2, booksMqtt.getDELIVER_TOPIC() + "/POST/" + id);
+	} catch (MqttException e) {
+	    e.printStackTrace();
 	}
 
-	public void handlePut(int id, MqttMessage message){
-		
+	LOG.log(Level.INFO, "REQUEST POST HAST BEEN HANDLED.");
 
-		Book updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class);
-		bookDAO.update(updatedBook);
-		try {
-			booksMqtt.sendMessage("DONE", 2, booksMqtt.getDELIVER_TOPIC() + "/PUT/:" + id);
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-		
-		LOG.log(Level.INFO, "REQUEST PUT HAST BEEN HANDLED.");
+    }
 
+    public void handlePut(int id, MqttMessage message) {
+
+	Book updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), Book.class);
+	bookDAO.update(updatedBook);
+	try {
+	    booksMqtt.sendMessage("DONE", 2, booksMqtt.getDELIVER_TOPIC() + "/PUT/" + id);
+	} catch (MqttException e) {
+	    e.printStackTrace();
 	}
 
-	public void handleDelete(int id){
-		
+	LOG.log(Level.INFO, "REQUEST PUT HAST BEEN HANDLED.");
 
-		bookDAO.delete(id);
-		try {
-			booksMqtt.sendMessage("DONE", 2, booksMqtt.getDELIVER_TOPIC() + "/DELETE/:" + id);
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-		
-		LOG.log(Level.INFO, "REQUEST DELETe HAST BEEN HANDLED.");
+    }
 
+    public void handleDelete(int id) {
+
+	bookDAO.delete(id);
+	try {
+	    booksMqtt.sendMessage("DONE", 2, booksMqtt.getDELIVER_TOPIC() + "/DELETE/" + id);
+	} catch (MqttException e) {
+	    e.printStackTrace();
 	}
 
-	private int extractId(String topic){
+	LOG.log(Level.INFO, "REQUEST DELETe HAST BEEN HANDLED.");
 
-		String[] splitedTopic = topic.split("/");
+    }
 
-		return Integer.parseInt(splitedTopic[splitedTopic.length]);
+    public void handleVoid() {
 
+	try {
+	    booksMqtt.sendMessage("UNKNOWN PATH", 2, booksMqtt.getDELIVER_TOPIC() + "/GETALL");
+	    System.out.println(booksMqtt.getDELIVER_TOPIC() + "/GETALL");
+	    LOG.log(Level.INFO, "REQUEST HAS NOT BEEN HANDLED");
+
+	} catch (MqttException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
 	}
+    }
+
+    private int extractId(String topic) {
+
+	String[] splitedTopic = topic.split("/");
+
+	return Integer.parseInt(splitedTopic[splitedTopic.length - 1]);
+
+    }
 }

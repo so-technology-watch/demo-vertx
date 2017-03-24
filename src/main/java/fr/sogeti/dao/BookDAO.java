@@ -15,43 +15,43 @@ import java.util.Map;
  * @author fduneau
  */
 public class BookDAO {
-    
+
     private final Map<Integer, Book> books;
-    
+
     public BookDAO() {
-        books = new HashMap<>();
-        books.put(1, new Book(1, "Le chien de baskeville", "S A. Conan Doyles"));
-        books.put(2, new Book(2, "Une étude en rouge", "S A. Conan Doyles"));
+	books = new HashMap<>();
+	books.put(1, new Book(1, "Le chien de baskeville", "S A. Conan Doyles"));
+	books.put(2, new Book(2, "Une étude en rouge", "S A. Conan Doyles"));
     }
 
     public Map<Integer, Book> getAll() {
-        return books;
+	return books;
     }
-    
+
     public Book get(Integer id) {
-        return books.get(id);
+	return books.get(id);
     }
-    
+
     public Book save(Book book) {
-        if(book.getId() == null) {
-            book.setId(nextId());
-        }
-        books.put(book.getId(), book);
-        return book;
+	if (book.getId() == null) {
+	    book.setId(nextId());
+	}
+	books.put(book.getId(), book);
+	return book;
     }
-    
+
     private Integer nextId() {
-        return Collections.max(books.keySet()) + 1;
+	return Collections.max(books.keySet()) + 1;
     }
-    
+
     public void delete(Integer id) {
-        books.remove(id);
+	books.remove(id);
     }
-    
-    public void update(Book book){
-        if(books.containsKey(book.getId())){
-            books.put(book.getId(), book);
-        }
+
+    public void update(Book book) {
+	if (books.containsKey(book.getId())) {
+	    books.put(book.getId(), book);
+	}
     }
-    
+
 }
