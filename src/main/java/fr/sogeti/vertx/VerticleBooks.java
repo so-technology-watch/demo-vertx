@@ -1,5 +1,6 @@
-package fr.sogti.main;
+package fr.sogeti.vertx;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -17,7 +18,8 @@ public class VerticleBooks extends AbstractVerticle {
 	try {
 	    this.booksMqtt = new BooksMqtt(serverURI, clientId);
 	} catch (MqttException e) {
-	    e.printStackTrace();
+
+	    LOG.log(Level.INFO, "An error occured while creating the MQTT client, ", e.getMessage());
 	}
     }
 

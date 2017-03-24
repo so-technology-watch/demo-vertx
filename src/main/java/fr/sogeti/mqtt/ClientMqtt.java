@@ -20,9 +20,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
  * @author fduneau
  */
 public class ClientMqtt {
+
     private String brokerUrl;
-    private String clientId;
-    private String topic;
     private final MemoryPersistence persistence = new MemoryPersistence();
     private static final Logger LOG = Logger.getLogger(ClientMqtt.class.getName());
     private final MqttClient client;
@@ -30,11 +29,11 @@ public class ClientMqtt {
     public ClientMqtt(String brokerUrl, String clientId) throws MqttException {
 
 	this.brokerUrl = brokerUrl;
-	this.clientId = clientId;
 	this.client = new MqttClient(brokerUrl, clientId, persistence);
     }
 
     public void sendMessage(String message, int qos, String topic) throws MqttException {
+
 	MqttMessage msg = new MqttMessage(message.getBytes());
 	msg.setQos(qos);
 	client.publish(topic, msg);
@@ -42,6 +41,7 @@ public class ClientMqtt {
     }
 
     public void connect() {
+
 	try {
 	    MqttConnectOptions connectOptions = new MqttConnectOptions();
 	    connectOptions.setCleanSession(true);
@@ -60,6 +60,7 @@ public class ClientMqtt {
     }
 
     public void disconnect() {
+
 	try {
 	    if (client.isConnected()) {
 		client.disconnect();
@@ -79,7 +80,8 @@ public class ClientMqtt {
 	try {
 	    client.subscribe(topic);
 	} catch (MqttException e) {
-	    e.printStackTrace();
+	    LOG.log(Level.INFO, "Failed subsribe client: {0}", e.getMessage());
+
 	}
     }
 
@@ -88,7 +90,7 @@ public class ClientMqtt {
 	try {
 	    client.unsubscribe(topic);
 	} catch (MqttException e) {
-	    e.printStackTrace();
+	    LOG.log(Level.INFO, "Failed subsribe client: {0}", e.getMessage());
 	}
     }
 
@@ -98,6 +100,7 @@ public class ClientMqtt {
     }
 
     public MqttClient getClient() {
+
 	return client;
     }
 
