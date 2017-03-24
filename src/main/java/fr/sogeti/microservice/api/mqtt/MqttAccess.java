@@ -40,10 +40,9 @@ public class MqttAccess<T> implements IMqttAccess<T>{
     public void getAll(Consumer<String> callback) {
         String pubSub = publishRoute+"/GETALL";
         String delSub = deliverRoute+"/GETALL";
-        System.out.println("GETT "+pubSub);
-        clientMqtt.subscribe(pubSub);
+
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage("",publishRoute , 2);
+        clientMqtt.sendMessage("", pubSub , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
             callback.accept(response);
@@ -56,9 +55,8 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         String pubSub = publishRoute+"/GET/"+id;
         String delSub = deliverRoute+"/GET/"+id;
 
-        clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage(""+id,publishRoute , 2);
+        clientMqtt.sendMessage(""+id, pubSub , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
             callback.accept(response);
@@ -72,9 +70,8 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         String pubSub = publishRoute+"/POST/"+idClient;
         String delSub = deliverRoute+"/POST/"+idClient;
         
-        clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
+        clientMqtt.sendMessage(gson.toJson(t), pubSub , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
             callback.accept(response);
@@ -88,9 +85,8 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         String pubSub = publishRoute+"/PUT/"+idClient;
         String delSub = deliverRoute+"/PUT/"+idClient;
         
-        clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
+        clientMqtt.sendMessage(gson.toJson(t), pubSub , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
             callback.accept(response);
@@ -103,9 +99,8 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         String pubSub = publishRoute+"/DELETE/"+id;
         String delSub = deliverRoute+"/DELETE/"+id;
         
-        clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage(""+id, publishRoute , 2);
+        clientMqtt.sendMessage(""+id, pubSub , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
             callback.accept(response);

@@ -40,6 +40,9 @@ public class ClientMqtt implements IClientMqtt {
         msg.setQos(qos);
         try{
             client.publish(topic, msg);
+            if(LOG.isLoggable(Level.INFO)){
+                LOG.log(Level.INFO, "Message sent on {0}", topic);
+            }
         }catch(MqttException e){
             if(LOG.isLoggable(Level.SEVERE)){
                 LOG.log(Level.SEVERE, "Unable to send a message to the broker : {0}", e.getMessage());
