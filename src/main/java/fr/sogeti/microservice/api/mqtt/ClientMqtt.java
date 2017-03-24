@@ -32,6 +32,7 @@ public class ClientMqtt implements IClientMqtt {
     
     @Override
     public void sendMessage(String message, String topic, int qos) {
+        reconnect();
         if(qos > 3 || qos < 0){
             throw new IllegalArgumentException("Invalid qos");
         }
@@ -57,7 +58,7 @@ public class ClientMqtt implements IClientMqtt {
             MqttConnectOptions connectOptions = new MqttConnectOptions();
             connectOptions.setCleanSession(true);
             if(!client.isConnected()){
-                client.connect();
+                client.connect(connectOptions);
                 if(LOG.isLoggable(Level.INFO)){
                     LOG.log(Level.INFO, "Client connected : {0}", client.getClientId());
                     LOG.log(Level.INFO, "Connected to {0}", brokerUrl);
@@ -88,6 +89,7 @@ public class ClientMqtt implements IClientMqtt {
     
     @Override
     public void subscribe(String topic) {
+        reconnect();
         try{
             client.subscribe(topic);
         }catch(MqttException e){
@@ -106,6 +108,18 @@ public class ClientMqtt implements IClientMqtt {
                 if(LOG.isLoggable(Level.SEVERE)){
                     LOG.log(Level.SEVERE, "Failed to unsubscribe client to a topic {0}", e.getMessage());
                 }    
+            }
+        }
+    }
+    
+    private void reconnect(){
+        if(!client.isConnected()){
+            try{
+                client.reconnect();
+            }catch(MqttException e){
+                if(LOG.isLoggable(Level.SEVERE)){
+                    LOG.log(Level.SEVERE, "Unable to reconnect the client {0}", e.getMessage());
+                }
             }
         }
     }

@@ -21,14 +21,19 @@ public class MessageCallback implements MqttCallback{
 	@Override
 	public void connectionLost(Throwable error) {
 		LOG.log(Level.INFO, "MessageCallback: connectionLost {0}", error.getMessage());
-		
+		error.printStackTrace();
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken delivery) {
         try{
             if(LOG.isLoggable(Level.INFO)){
-                LOG.log(Level.INFO, "MessageCallback: deliveryComplete: {0}", delivery.getMessage().getPayload());
+                MqttMessage message = delivery.getMessage();
+                if(message != null){
+                    LOG.log(Level.INFO, "MessageCallback: deliveryComplete: {0}", message.getPayload());
+                }else{
+                    LOG.log(Level.INFO, "MessageCallback: deliveryComplete: received an empty message");
+                }
             }
         }catch(MqttException e){
             e.printStackTrace();

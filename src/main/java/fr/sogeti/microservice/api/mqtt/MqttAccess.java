@@ -40,7 +40,7 @@ public class MqttAccess<T> implements IMqttAccess<T>{
     public void getAll(Consumer<String> callback) {
         String pubSub = publishRoute+"/GETALL";
         String delSub = deliverRoute+"/GETALL";
-        
+        System.out.println("GETT "+pubSub);
         clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
         clientMqtt.sendMessage("",publishRoute , 2);
@@ -55,7 +55,7 @@ public class MqttAccess<T> implements IMqttAccess<T>{
     public void get(int id, Consumer<String> callback) {
         String pubSub = publishRoute+"/GET/"+id;
         String delSub = deliverRoute+"/GET/"+id;
-        
+
         clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
         clientMqtt.sendMessage(""+id,publishRoute , 2);
