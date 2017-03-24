@@ -73,14 +73,12 @@ public class RestVerticle<T> extends AbstractVerticle {
             // if there is no id, getAll()
             accessMqtt.getAll( json -> {
                 response.end(gson.toJson(json));
-                return null;
             } );
         }else{
             if(isInteger(idStr)){
                 int id = Integer.parseInt(idStr);
                 accessMqtt.get(id , json -> {
                     response.end(json);
-                    return null;
                 } );
             }
         }
@@ -95,7 +93,6 @@ public class RestVerticle<T> extends AbstractVerticle {
             T type = gson.fromJson(bookJson, clazz);
             accessMqtt.save(type, json -> {
                 response.end(json);
-                return null;
             });
         }
         
@@ -110,7 +107,6 @@ public class RestVerticle<T> extends AbstractVerticle {
             T book = gson.fromJson(bookStr, clazz);
             accessMqtt.update(book, json -> {
                 response.end(json);
-                return null;
             });
         }
     }
@@ -125,7 +121,6 @@ public class RestVerticle<T> extends AbstractVerticle {
             int id = Integer.parseInt(idStr);
             accessMqtt.delete(id, json -> {
                 response.setStatusCode(HttpResponseStatus.OK.code());
-                return null;
             });
         }
     }

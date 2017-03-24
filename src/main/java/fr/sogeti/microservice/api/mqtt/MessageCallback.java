@@ -1,7 +1,7 @@
 package fr.sogeti.microservice.api.mqtt;
 
 import io.vertx.core.buffer.Buffer;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -12,9 +12,9 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class MessageCallback implements MqttCallback{
 	
     private static final Logger LOG = Logger.getLogger(MessageCallback.class.getName());
-    private final Function<String, Void> callbackMessageArrived;
+    private final Consumer<String> callbackMessageArrived;
     
-    public MessageCallback(Function<String, Void> callbackMessageArrived) {
+    public MessageCallback(Consumer<String> callbackMessageArrived) {
     	this.callbackMessageArrived = callbackMessageArrived;
 	}
     
@@ -41,7 +41,7 @@ public class MessageCallback implements MqttCallback{
         if(LOG.isLoggable(Level.INFO)){
             LOG.log(Level.INFO, "MessageCallback: Message recieved: {0}", messageStr);
         }
-		callbackMessageArrived.apply(messageStr);
+		callbackMessageArrived.accept(messageStr);
 	}
 
 }

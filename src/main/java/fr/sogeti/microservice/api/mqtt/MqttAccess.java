@@ -1,7 +1,7 @@
 package fr.sogeti.microservice.api.mqtt;
 
 import com.google.gson.Gson;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -37,7 +37,7 @@ public class MqttAccess<T> implements IMqttAccess<T>{
     }
     
     @Override
-    public void getAll(Function<String, Void> callback) {
+    public void getAll(Consumer<String> callback) {
         String pubSub = publishRoute+"/GETALL";
         String delSub = deliverRoute+"/GETALL";
         
@@ -46,30 +46,28 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         clientMqtt.sendMessage("",publishRoute , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
-            callback.apply(response);
+            callback.accept(response);
             clientMqtt.unsubscribe(pubSub, delSub);
-            return null;
         }));
     }
 
     @Override
-    public void get(int id, Function<String, Void> callback) {
+    public void get(int id, Consumer<String> callback) {
         String pubSub = publishRoute+"/GET/"+id;
         String delSub = deliverRoute+"/GET/"+id;
         
         clientMqtt.subscribe(pubSub);
         clientMqtt.subscribe(delSub);
-        clientMqtt.sendMessage("",publishRoute , 2);
+        clientMqtt.sendMessage(""+id,publishRoute , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
-            callback.apply(response);
+            callback.accept(response);
             clientMqtt.unsubscribe(pubSub, delSub);
-            return null;
         }));
     }
 
     @Override
-    public void save(T t, Function<String, Void> callback) {
+    public void save(T t, Consumer<String> callback) {
         Gson gson = new Gson();
         String pubSub = publishRoute+"/POST/"+idClient;
         String delSub = deliverRoute+"/POST/"+idClient;
@@ -79,14 +77,13 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
-            callback.apply(response);
+            callback.accept(response);
             clientMqtt.unsubscribe(pubSub, delSub);
-            return null;
         }));
     }
 
     @Override
-    public void update(T t, Function<String, Void> callback) {
+    public void update(T t, Consumer<String> callback) {
         Gson gson = new Gson();
         String pubSub = publishRoute+"/PUT/"+idClient;
         String delSub = deliverRoute+"/PUT/"+idClient;
@@ -96,14 +93,13 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         clientMqtt.sendMessage(gson.toJson(t), publishRoute , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
-            callback.apply(response);
+            callback.accept(response);
             clientMqtt.unsubscribe(delSub, pubSub);
-            return null;
         }));
     }
     
     @Override
-    public void delete(int id, Function<String, Void> callback) {
+    public void delete(int id, Consumer<String> callback) {
         String pubSub = publishRoute+"/DELETE/"+id;
         String delSub = deliverRoute+"/DELETE/"+id;
         
@@ -112,9 +108,8 @@ public class MqttAccess<T> implements IMqttAccess<T>{
         clientMqtt.sendMessage(""+id, publishRoute , 2);
         
         clientMqtt.setCallback(new MessageCallback( response -> {
-            callback.apply(response);
+            callback.accept(response);
             clientMqtt.unsubscribe(delSub, pubSub);
-            return null;
         }));
     }
     
