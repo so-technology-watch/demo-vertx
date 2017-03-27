@@ -2,8 +2,7 @@ package fr.sogeti.mqtt;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +40,12 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
     private final String deleteDeliveryPath;
     private final String voidDeliveryPath;
 
-    public MessageRecievedCallback(ElementsMqtt<T> elementsMqtt, Class<T> clazz) {
+    public MessageRecievedCallback(ElementsMqtt<T> elementsMqtt, Class<T> clazz, DAO<T> dao) {
 
 	this.elementsMqtt = elementsMqtt;
 	this.clazz = clazz;
-	this.dao = new DAO<T>(new HashMap<Integer, T>());
+	this.dao = dao;
+	dao.init();
 	getPublishingPath = elementsMqtt.getPublishTopic() + "/GET/.+";
 	getallPublishingPath = elementsMqtt.getPublishTopic() + "/GETALL";
 	postPublishingPath = elementsMqtt.getPublishTopic() + "/POST/.+";
@@ -114,7 +114,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 
 	try {
 	    System.out.println(gson.toJson(dao.get(id)));
-	    elementsMqtt.sendMessage(gson.toJson(dao.get(id)), 2, getDeliveryPath + id);
+	    elementsMqtt.sendMessage(gson.toJson(dao.get(id)), 2, elementsMqtt.getDeliverTopic() + "/GET/" + id);
 
 	} catch (MqttException e) {
 
@@ -131,7 +131,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
      */
     public void handleGetAll() {
 
-	Type listType = new TypeToken<Map<Integer, Book>>() {
+	Type listType = new TypeToken<List<Book>>() {
 	}.getType();
 	try {
 	    elementsMqtt.sendMessage(gson.toJson(dao.getAll(), listType), 2, getallDeliveryPath);
@@ -145,7 +145,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 
     /**
      * Handles messages coming on the POST subtopic by adding the new item and
-     * sending back it's id.
+     * send back DONE when done.
      * 
      * @param message
      * @param id
@@ -153,9 +153,9 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 
     public void handlePost(MqttMessage message, int id) {
 
-	T element = dao.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), clazz));
+	dao.save(gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), clazz));
 	try {
-	    elementsMqtt.sendMessage(gson.toJson(element), 2, postDeliveryPath + id);
+	    elementsMqtt.sendMessage("DONE", 2, elementsMqtt.getDeliverTopic() + "/POST/" + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -176,7 +176,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 	T updatedBook = gson.fromJson(new String(message.getPayload(), StandardCharsets.UTF_8), clazz);
 	dao.update(updatedBook);
 	try {
-	    elementsMqtt.sendMessage("DONE", 2, putDeliveryPath + id);
+	    elementsMqtt.sendMessage("DONE", 2, elementsMqtt.getDeliverTopic() + "/PUT/" + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
@@ -195,7 +195,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 
 	dao.delete(id);
 	try {
-	    elementsMqtt.sendMessage("DONE", 2, deleteDeliveryPath + id);
+	    elementsMqtt.sendMessage("DONE", 2, elementsMqtt.getDeliverTopic() + "/DELETE/" + id);
 	} catch (MqttException e) {
 	    e.printStackTrace();
 	}
