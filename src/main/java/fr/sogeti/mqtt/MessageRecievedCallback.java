@@ -200,7 +200,7 @@ public class MessageRecievedCallback<T extends Element> implements MqttCallback 
 	    e.printStackTrace();
 	}
 
-	LOG.log(Level.INFO, "REQUEST DELETE HAST BEEN HANDLED.");
+	LOG.log(Level.INFO, "REQUEST DELETE HAS BEEN HANDLED.");
 
     }
 
