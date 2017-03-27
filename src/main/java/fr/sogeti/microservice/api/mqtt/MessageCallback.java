@@ -13,15 +13,22 @@ public class MessageCallback implements MqttCallback{
 	
     private static final Logger LOG = Logger.getLogger(MessageCallback.class.getName());
     private final Consumer<String> callbackMessageArrived;
+    private final Consumer<Throwable> callbackError;
+    private ClientMqtt client;
     
-    public MessageCallback(Consumer<String> callbackMessageArrived) {
+    public MessageCallback(Consumer<String> callbackMessageArrived, Consumer<Throwable> callbackError ) {
     	this.callbackMessageArrived = callbackMessageArrived;
+        this.callbackError = callbackError;
 	}
     
 	@Override
 	public void connectionLost(Throwable error) {
 		LOG.log(Level.INFO, "MessageCallback: connectionLost {0}", error.getMessage());
 		error.printStackTrace();
+        if(client != null){
+            client.reconnect();
+        }
+        callbackError.accept(error);
 	}
 
 	@Override
@@ -49,4 +56,8 @@ public class MessageCallback implements MqttCallback{
 		callbackMessageArrived.accept(messageStr);
 	}
 
+    public void setClient(ClientMqtt client) {
+        this.client = client;
+    }
+    
 }

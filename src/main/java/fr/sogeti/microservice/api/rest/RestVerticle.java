@@ -130,6 +130,7 @@ public class RestVerticle<T> extends AbstractVerticle {
             LOG.log(Level.WARNING, "a request failed with the error : {0}", failure.failure().getMessage());
             LOG.log(Level.WARNING, "the request fail was on {0}", failure.currentRoute().getPath());
         }
+        failure.response().end("ERROR");
     }
     
     private boolean isInteger(String idStr){

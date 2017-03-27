@@ -32,10 +32,10 @@ public class ClientMqtt implements IClientMqtt {
     
     @Override
     public void sendMessage(String message, String topic, int qos) {
-        reconnect();
         if(qos > 3 || qos < 0){
             throw new IllegalArgumentException("Invalid qos");
         }
+        reconnect();
         MqttMessage msg = new MqttMessage(message.getBytes());
         msg.setQos(qos);
         try{
@@ -52,9 +52,35 @@ public class ClientMqtt implements IClientMqtt {
     
     @Override
     public void setCallback(MessageCallback messageCallback){
+        messageCallback.setClient(this);
         client.setCallback(messageCallback);
     }
     
+    @Override
+    public void subscribe(String topic) {
+        reconnect();
+        try{
+            client.subscribe(topic);
+        }catch(MqttException e){
+            if(LOG.isLoggable(Level.SEVERE)){
+                LOG.log(Level.SEVERE, "Failed to subscribe client to a topic {0}", e.getMessage());
+            }
+        }
+    }
+    
+    @Override
+    public void unsubscribe(String ... topics){
+        reconnect();
+        for(String topic : topics){
+            try{
+                client.unsubscribe(topic);
+            }catch(MqttException e){
+                if(LOG.isLoggable(Level.SEVERE)){
+                    LOG.log(Level.SEVERE, "Failed to unsubscribe client to a topic {0}", e.getMessage());
+                }    
+            }
+        }
+    }
     @Override
     public void connect(){
         try{
@@ -90,35 +116,14 @@ public class ClientMqtt implements IClientMqtt {
         }
     }
     
-    @Override
-    public void subscribe(String topic) {
-        reconnect();
-        try{
-            client.subscribe(topic);
-        }catch(MqttException e){
-            if(LOG.isLoggable(Level.SEVERE)){
-                LOG.log(Level.SEVERE, "Failed to subscribe client to a topic {0}", e.getMessage());
-            }
-        }
-    }
-    
-    @Override
-    public void unsubscribe(String ... topics){
-        for(String topic : topics){
-            try{
-                client.unsubscribe(topic);
-            }catch(MqttException e){
-                if(LOG.isLoggable(Level.SEVERE)){
-                    LOG.log(Level.SEVERE, "Failed to unsubscribe client to a topic {0}", e.getMessage());
-                }    
-            }
-        }
-    }
-    
-    private void reconnect(){
+    void reconnect(){
+        System.out.println(client.isConnected());
         if(!client.isConnected()){
-            try{
-                client.reconnect();
+            try {
+                client.connect();
+                if(LOG.isLoggable(Level.INFO)){
+                    LOG.log(Level.INFO, "Client reconnected");
+                }
             }catch(MqttException e){
                 if(LOG.isLoggable(Level.SEVERE)){
                     LOG.log(Level.SEVERE, "Unable to reconnect the client {0}", e.getMessage());
